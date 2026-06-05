@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://klinika-1-rj8n.onrender.com/api';
 
 function Login({ setToken, setUser }) {
   const navigate = useNavigate();

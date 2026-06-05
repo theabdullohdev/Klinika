@@ -14,8 +14,8 @@ import Diagnoses from './pages/Diagnoses';
 import Departments from './pages/Departments';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// Read API URL from environment variables, fallback to localhost:5000
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
+// Read API URL from environment variables, fallback to Render production API URL
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://klinika-1-rj8n.onrender.com/api';
 
 function App() {
   const navigate = useNavigate();
