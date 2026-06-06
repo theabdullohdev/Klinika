@@ -150,7 +150,7 @@ function Doctors({ doctors, departments, isAdmin, loading, setLoading, fetchDoct
                         </div>
                         <div>
                           <span className="profile-name">Dr. {doc.first_name} {doc.last_name}</span>
-                          <div className="profile-subtext">Department ID: {doc.department_id.substring(0,8)}...</div>
+                          <div className="profile-subtext">Bo'lim ID: {doc.department_id.substring(0,8)}...</div>
                         </div>
                       </div>
                     </td>

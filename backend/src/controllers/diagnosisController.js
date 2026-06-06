@@ -6,13 +6,23 @@ export const getAllDiagnoses = async (req, res) => {
     let sql = 'SELECT * FROM diagnoses WHERE 1=1';
     const params = [];
 
+    if (req.user.role === 'clinician') {
+      const docRes = await query('SELECT id FROM doctors WHERE user_id = $1', [req.user.id]);
+      if (docRes.rows.length > 0) {
+        const loggedInDoctorId = docRes.rows[0].id;
+        params.push(loggedInDoctorId);
+        sql += ` AND (doctor_id = $${params.length} OR patient_id IN (SELECT id FROM patients WHERE doctor_id = $${params.length}))`;
+      } else {
+        sql += ' AND 1=0';
+      }
+    } else if (doctor_id) {
+      params.push(doctor_id);
+      sql += ` AND doctor_id = $${params.length}`;
+    }
+
     if (patient_id) {
       params.push(patient_id);
       sql += ` AND patient_id = $${params.length}`;
-    }
-    if (doctor_id) {
-      params.push(doctor_id);
-      sql += ` AND doctor_id = $${params.length}`;
     }
     if (icd_code) {
       params.push(icd_code);
@@ -49,10 +59,20 @@ export const getDiagnosisById = async (req, res) => {
 export const createDiagnosis = async (req, res) => {
   const { patient_id, doctor_id, icd_code, description, severity, status, notes, diagnosed_at } = req.body;
   try {
+    let finalDoctorId = doctor_id;
+    if (req.user.role === 'clinician') {
+      const docRes = await query('SELECT id FROM doctors WHERE user_id = $1', [req.user.id]);
+      if (docRes.rows.length > 0) {
+        finalDoctorId = docRes.rows[0].id;
+      } else {
+        return res.status(400).json({ message: 'Logged-in user is a clinician but has no associated doctor profile.' });
+      }
+    }
+
     const result = await query(
       `INSERT INTO diagnoses (patient_id, doctor_id, icd_code, description, severity, status, notes, diagnosed_at) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [patient_id, doctor_id, icd_code, description, severity, status || 'active', notes, diagnosed_at || new Date()],
+      [patient_id, finalDoctorId, icd_code, description, severity, status || 'active', notes, diagnosed_at || new Date()],
       req.user.role
     );
     res.status(201).json(result.rows[0]);

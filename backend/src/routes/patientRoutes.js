@@ -103,7 +103,7 @@ router.get('/:id/full-profile', patientController.getPatientFullProfile);
  *       201:
  *         description: Patient registered
  */
-router.post('/', authorizeRoles('admin', 'receptionist'), patientController.createPatient);
+router.post('/', authorizeRoles('admin', 'clinician', 'receptionist'), patientController.createPatient);
 
 /**
  * @swagger

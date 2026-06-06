@@ -61,10 +61,18 @@ export const getPatientFullProfile = async (req, res) => {
 export const createPatient = async (req, res) => {
   const { doctor_id, first_name, last_name, date_of_birth, gender, blood_type, phone, email, address, emergency_contact, notes } = req.body;
   try {
+    let finalDoctorId = doctor_id;
+    if (req.user.role === 'clinician') {
+      const docRes = await query('SELECT id FROM doctors WHERE user_id = $1', [req.user.id]);
+      if (docRes.rows.length > 0) {
+        finalDoctorId = docRes.rows[0].id;
+      }
+    }
+
     const result = await query(
       `INSERT INTO patients (doctor_id, first_name, last_name, date_of_birth, gender, blood_type, phone, email, address, emergency_contact, notes) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
-      [doctor_id, first_name, last_name, date_of_birth, gender, blood_type || 'unknown', phone, email, address, emergency_contact, notes],
+      [finalDoctorId, first_name, last_name, date_of_birth, gender, blood_type || 'unknown', phone, email, address, emergency_contact, notes],
       req.user.role
     );
     res.status(201).json(result.rows[0]);

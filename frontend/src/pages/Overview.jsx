@@ -54,7 +54,7 @@ function Overview({ patients, doctors, diagnoses, departments, doctorStats }) {
       <div className="dashboard-panel">
         <div className="control-bar">
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '18px', color: 'var(--text-heading)' }}>
-            Shifokorlar Yuklamasi va Statistikasi (vw_doctor_stats)
+            Shifokorlar Yuklamasi va Statistikasi
           </h2>
         </div>
         

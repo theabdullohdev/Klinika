@@ -62,8 +62,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
           alert('Bemor yozuvi to\'liq yangilandi!');
         }
       } else {
-        // Register patient: Admin and Receptionist only
-        if (isClinician) return alert('Bemor qo\'shish huquqi faqat admin/receptionist rollariga berilgan.');
+        // Clinicians, Admins, and Receptionists can register patients
         
         const formattedInput = { ...patientInput };
         if (!formattedInput.doctor_id) delete formattedInput.doctor_id;
@@ -186,7 +185,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
           </select>
         </div>
 
-        {(isAdmin || isReceptionist) && (
+        {(isAdmin || isReceptionist || isClinician) && (
           <button 
             className="btn btn-primary"
             style={{ marginLeft: '16px', flexShrink: 0 }}
@@ -237,7 +236,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                         </div>
                         <div>
                           <span className="profile-name">{p.first_name} {p.last_name}</span>
-                          <div className="profile-subtext">Doctor ID: {p.doctor_id ? p.doctor_id.substring(0,8) : 'Biriktirilmagan'}...</div>
+                          <div className="profile-subtext">Shifokor ID: {p.doctor_id ? p.doctor_id.substring(0,8) : 'Biriktirilmagan'}...</div>
                         </div>
                       </div>
                     </td>
@@ -315,7 +314,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                       value={patientInput.first_name}
                       onChange={(e) => setPatientInput({ ...patientInput, first_name: e.target.value })}
                       required
-                      disabled={isClinician}
+                      disabled={isClinician && selectedPatient}
                     />
                   </div>
 
@@ -326,7 +325,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                       value={patientInput.last_name}
                       onChange={(e) => setPatientInput({ ...patientInput, last_name: e.target.value })}
                       required
-                      disabled={isClinician}
+                      disabled={isClinician && selectedPatient}
                     />
                   </div>
 
@@ -337,7 +336,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                       value={patientInput.date_of_birth}
                       onChange={(e) => setPatientInput({ ...patientInput, date_of_birth: e.target.value })}
                       required
-                      disabled={isClinician}
+                      disabled={isClinician && selectedPatient}
                     />
                   </div>
 
@@ -347,7 +346,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                       value={patientInput.gender}
                       onChange={(e) => setPatientInput({ ...patientInput, gender: e.target.value })}
                       required
-                      disabled={isClinician}
+                      disabled={isClinician && selectedPatient}
                     >
                       <option value="male">Erkak</option>
                       <option value="female">Ayol</option>
@@ -359,7 +358,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                     <select 
                       value={patientInput.blood_type}
                       onChange={(e) => setPatientInput({ ...patientInput, blood_type: e.target.value })}
-                      disabled={isClinician}
+                      disabled={isClinician && selectedPatient}
                     >
                       <option value="unknown">Noma'lum</option>
                       <option value="A+">A+ (II guruh)</option>
@@ -378,7 +377,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                     <select 
                       value={patientInput.doctor_id}
                       onChange={(e) => setPatientInput({ ...patientInput, doctor_id: e.target.value })}
-                      disabled={isClinician}
+                      disabled={isClinician && selectedPatient}
                     >
                       <option value="">Shifokor biriktirilmasin</option>
                       {doctors.map(d => (
@@ -394,7 +393,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                       placeholder="+998909876543"
                       value={patientInput.phone}
                       onChange={(e) => setPatientInput({ ...patientInput, phone: e.target.value })}
-                      disabled={isClinician}
+                      disabled={isClinician && selectedPatient}
                     />
                   </div>
 
@@ -405,7 +404,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                       placeholder="patient@gmail.com"
                       value={patientInput.email}
                       onChange={(e) => setPatientInput({ ...patientInput, email: e.target.value })}
-                      disabled={isClinician}
+                      disabled={isClinician && selectedPatient}
                     />
                   </div>
 
@@ -416,7 +415,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                       placeholder="Toshkent sh., Yunusobod tumani..."
                       value={patientInput.address}
                       onChange={(e) => setPatientInput({ ...patientInput, address: e.target.value })}
-                      disabled={isClinician}
+                      disabled={isClinician && selectedPatient}
                     />
                   </div>
 
@@ -427,7 +426,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                       placeholder="Jane Doe (Ayoli) +998909998877"
                       value={patientInput.emergency_contact}
                       onChange={(e) => setPatientInput({ ...patientInput, emergency_contact: e.target.value })}
-                      disabled={isClinician}
+                      disabled={isClinician && selectedPatient}
                     />
                   </div>
 
