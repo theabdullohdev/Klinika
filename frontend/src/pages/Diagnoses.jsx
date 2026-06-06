@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, Edit2, Trash2, FolderHeart, X } from 'lucide-react';
+import Pagination from '../components/Pagination';
 
 const diseaseCategories = [
   { code: 'A00', label: 'Yuqumli va parazitar kasalliklar (A00-B99)' },
@@ -21,10 +22,13 @@ const getDiseaseCategoryLabel = (code) => {
   return diseaseCategories.find((category) => category.code.charAt(0) === prefix)?.label || 'Kategoriya tanlanmagan';
 };
 
-function Diagnoses({ diagnoses, doctors, isAdmin, loading, setLoading, fetchDiagnoses, apiRequest }) {
+const PAGE_SIZE = 8;
+
+function Diagnoses({ diagnoses, doctors, isAdmin, loading, setLoading, fetchDiagnoses, apiRequest, notify }) {
   const [diagDoctorFilter, setDiagDoctorFilter] = useState('');
   const [diagCategoryFilter, setDiagCategoryFilter] = useState('');
   const [diagSeverityFilter, setDiagSeverityFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [activeModal, setActiveModal] = useState(null); // null | 'diagnosis_form'
   const [selectedDiagnosis, setSelectedDiagnosis] = useState(null);
 
@@ -36,7 +40,7 @@ function Diagnoses({ diagnoses, doctors, isAdmin, loading, setLoading, fetchDiag
   const handleDiagnosisSubmit = async (e) => {
     e.preventDefault();
     if (!diagnosisInput.icd_code) {
-      alert('Kasallik kategoriyasini tanlang.');
+      notify?.('error', 'Request jo\'natilmadi', 'Kasallik kategoriyasini tanlang.');
       return;
     }
 
@@ -54,15 +58,15 @@ function Diagnoses({ diagnoses, doctors, isAdmin, loading, setLoading, fetchDiag
           status: formattedInput.status,
           notes: formattedInput.notes
         });
-        alert('Kasallik yozuvi yangilandi!');
+        notify?.('success', 'Request jo\'natildi', 'Kasallik yozuvi yangilandi.');
       } else {
         await apiRequest('POST', '/diagnoses', formattedInput);
-        alert('Yangi kasallik muvaffaqiyatli kiritildi!');
+        notify?.('success', 'Request jo\'natildi', 'Yangi kasallik muvaffaqiyatli kiritildi.');
       }
       setActiveModal(null);
       fetchDiagnoses();
     } catch (err) {
-      alert(err.message || 'Xatolik yuz berdi. Iltimos tekshirib qaytadan urinib ko\'ring.');
+      notify?.('error', 'Request jo\'natilmadi', err.message || 'Xatolik yuz berdi. Iltimos tekshirib qaytadan urinib ko\'ring.');
     } finally {
       setLoading(false);
     }
@@ -84,14 +88,17 @@ function Diagnoses({ diagnoses, doctors, isAdmin, loading, setLoading, fetchDiag
   };
 
   const handleDeleteDiagnosis = async (id) => {
-    if (!isAdmin) return alert('Kasalliklarni o\'chirish huquqi faqat administratorga tegishli.');
+    if (!isAdmin) {
+      notify?.('error', 'Request jo\'natilmadi', 'Kasalliklarni o\'chirish huquqi faqat administratorga tegishli.');
+      return;
+    }
     if (!confirm('Ushbu kasallik yozuvini o\'chirishni xohlaysizmi?')) return;
     try {
       await apiRequest('DELETE', `/diagnoses/${id}`);
-      alert('Kasallik yozuvi o\'chirildi!');
+      notify?.('success', 'Request jo\'natildi', 'Kasallik yozuvi o\'chirildi.');
       fetchDiagnoses();
     } catch (err) {
-      alert(err.message || 'O\'chirishda xatolik yuz berdi');
+      notify?.('error', 'Request jo\'natilmadi', err.message || 'O\'chirishda xatolik yuz berdi.');
     }
   };
 
@@ -102,6 +109,10 @@ function Diagnoses({ diagnoses, doctors, isAdmin, loading, setLoading, fetchDiag
     return matchesDoctor && matchesCategory && matchesSeverity;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredDiagnoses.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedDiagnoses = filteredDiagnoses.slice((safeCurrentPage - 1) * PAGE_SIZE, safeCurrentPage * PAGE_SIZE);
+
   return (
     <>
       {/* Search Header Action inside page */}
@@ -110,7 +121,10 @@ function Diagnoses({ diagnoses, doctors, isAdmin, loading, setLoading, fetchDiag
           <select 
             className="filter-select"
             value={diagDoctorFilter}
-            onChange={(e) => setDiagDoctorFilter(e.target.value)}
+            onChange={(e) => {
+              setDiagDoctorFilter(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="">Barcha shifokorlar</option>
             {doctors.map(d => (
@@ -121,7 +135,10 @@ function Diagnoses({ diagnoses, doctors, isAdmin, loading, setLoading, fetchDiag
           <select 
             className="filter-select"
             value={diagCategoryFilter}
-            onChange={(e) => setDiagCategoryFilter(e.target.value)}
+            onChange={(e) => {
+              setDiagCategoryFilter(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="">Barcha kategoriyalar</option>
             {diseaseCategories.map(category => (
@@ -132,7 +149,10 @@ function Diagnoses({ diagnoses, doctors, isAdmin, loading, setLoading, fetchDiag
           <select 
             className="filter-select"
             value={diagSeverityFilter}
-            onChange={(e) => setDiagSeverityFilter(e.target.value)}
+            onChange={(e) => {
+              setDiagSeverityFilter(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="">Barcha og'irlik darajalari</option>
             <option value="mild">Yengil</option>
@@ -181,11 +201,11 @@ function Diagnoses({ diagnoses, doctors, isAdmin, loading, setLoading, fetchDiag
                 </tr>
               </thead>
               <tbody>
-                {filteredDiagnoses.map(diag => {
+                {paginatedDiagnoses.map(diag => {
                   const doctor = doctors.find(d => d.id === diag.doctor_id);
                   return (
                     <tr key={diag.id}>
-                      <td style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--color-primary)' }}>
+                      <td style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'hsl(var(--color-primary))' }}>
                         {getDiseaseCategoryLabel(diag.icd_code)}
                       </td>
                       <td style={{ maxWidth: '280px', textOverflow: 'ellipsis', overflow: 'hidden' }}>
@@ -235,6 +255,12 @@ function Diagnoses({ diagnoses, doctors, isAdmin, loading, setLoading, fetchDiag
             </table>
           )}
         </div>
+        <Pagination
+          totalItems={filteredDiagnoses.length}
+          currentPage={safeCurrentPage}
+          pageSize={PAGE_SIZE}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Modal: Disease Form */}

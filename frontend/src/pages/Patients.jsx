@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Search, Plus, Edit2, Trash2, Eye, UserRound, X, Heart, AlertCircle } from 'lucide-react';
+import Pagination from '../components/Pagination';
 
 const diseaseCategories = [
   { code: 'A00', label: 'Yuqumli va parazitar kasalliklar (A00-B99)' },
@@ -16,9 +17,12 @@ const diseaseCategories = [
   { code: 'S00', label: 'Jarohatlar va zaharlanishlar (S00-T88)' }
 ];
 
-function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loading, setLoading, fetchPatients, apiRequest }) {
+const PAGE_SIZE = 8;
+
+function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loading, setLoading, fetchPatients, apiRequest, notify }) {
   const [patientSearch, setPatientSearch] = useState('');
   const [patientDocFilter, setPatientDocFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   
   const [activeModal, setActiveModal] = useState(null); // null | 'patient_form' | 'patient_profile' | 'diagnosis_form'
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -45,7 +49,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
           await apiRequest('PUT', `/patients/${selectedPatient.id}`, {
             notes: patientInput.notes
           });
-          alert('Bemorning shifokor eslatmalari yangilandi!');
+          notify?.('success', 'Request jo\'natildi', 'Bemorning shifokor eslatmalari yangilandi.');
         } else if (isReceptionist) {
           // Receptionist edits demographic details, skip notes update
           const formattedInput = { ...patientInput };
@@ -53,13 +57,13 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
           delete formattedInput.notes; // Skip clinical notes to comply with RLS permissions
           
           await apiRequest('PUT', `/patients/${selectedPatient.id}`, formattedInput);
-          alert('Bemor ma\'muriy ma\'lumotlari yangilandi!');
+          notify?.('success', 'Request jo\'natildi', 'Bemor ma\'muriy ma\'lumotlari yangilandi.');
         } else {
           // Admin can edit all fields
           const formattedInput = { ...patientInput };
           if (!formattedInput.doctor_id) delete formattedInput.doctor_id;
           await apiRequest('PUT', `/patients/${selectedPatient.id}`, formattedInput);
-          alert('Bemor yozuvi to\'liq yangilandi!');
+          notify?.('success', 'Request jo\'natildi', 'Bemor yozuvi to\'liq yangilandi.');
         }
       } else {
         // Clinicians, Admins, and Receptionists can register patients
@@ -73,12 +77,12 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
         }
 
         await apiRequest('POST', '/patients', formattedInput);
-        alert('Yangi bemor muvaffaqiyatli ro\'yxatga olindi!');
+        notify?.('success', 'Request jo\'natildi', 'Yangi bemor muvaffaqiyatli ro\'yxatga olindi.');
       }
       setActiveModal(null);
       fetchPatients();
     } catch (err) {
-      alert(err.message || 'Xatolik yuz berdi');
+      notify?.('error', 'Request jo\'natilmadi', err.message || 'Xatolik yuz berdi.');
     } finally {
       setLoading(false);
     }
@@ -110,26 +114,29 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
       setPatientFullProfile(data);
       setActiveModal('patient_profile');
     } catch {
-      alert('Tizimdan to\'liq profil olishda xatolik yuz berdi.');
+      notify?.('error', 'Request jo\'natilmadi', 'Tizimdan to\'liq profil olishda xatolik yuz berdi.');
     }
   };
 
   const handleDeletePatient = async (id) => {
-    if (!isAdmin) return alert('Faqat admin bemorlarni o\'chirib tashlay oladi.');
+    if (!isAdmin) {
+      notify?.('error', 'Request jo\'natilmadi', 'Faqat admin bemorlarni o\'chirib tashlay oladi.');
+      return;
+    }
     if (!confirm('Haqiqatan ham ushbu bemorning barcha tarixini tizimdan butunlay o\'chirib tashlamoqchimisiz?')) return;
     try {
       await apiRequest('DELETE', `/patients/${id}`);
-      alert('Bemor yozuvi butunlay o\'chirildi!');
+      notify?.('success', 'Request jo\'natildi', 'Bemor yozuvi butunlay o\'chirildi.');
       fetchPatients();
     } catch (err) {
-      alert(err.message || 'O\'chirishda xatolik yuz berdi');
+      notify?.('error', 'Request jo\'natilmadi', err.message || 'O\'chirishda xatolik yuz berdi.');
     }
   };
 
   const handleTimelineDiagnosisSubmit = async (e) => {
     e.preventDefault();
     if (!diagnosisInput.icd_code) {
-      alert('Kasallik kategoriyasini tanlang.');
+      notify?.('error', 'Request jo\'natilmadi', 'Kasallik kategoriyasini tanlang.');
       return;
     }
 
@@ -139,14 +146,14 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
       if (!formattedInput.doctor_id) delete formattedInput.doctor_id;
 
       await apiRequest('POST', '/diagnoses', formattedInput);
-      alert('Yangi kasallik muvaffaqiyatli kiritildi!');
+      notify?.('success', 'Request jo\'natildi', 'Yangi kasallik muvaffaqiyatli kiritildi.');
       setActiveModal('patient_profile');
       
       if (selectedPatient) {
         viewPatientProfile(selectedPatient);
       }
     } catch (err) {
-      alert(err.message || 'Xatolik yuz berdi.');
+      notify?.('error', 'Request jo\'natilmadi', err.message || 'Xatolik yuz berdi.');
     } finally {
       setLoading(false);
     }
@@ -159,6 +166,10 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
     return matchesSearch && matchesDoc;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredPatients.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedPatients = filteredPatients.slice((safeCurrentPage - 1) * PAGE_SIZE, safeCurrentPage * PAGE_SIZE);
+
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -169,14 +180,20 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
               type="text" 
               placeholder="Bemor ismi bo'yicha qidirish..." 
               value={patientSearch}
-              onChange={(e) => setPatientSearch(e.target.value)}
+              onChange={(e) => {
+                setPatientSearch(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
 
           <select 
             className="filter-select"
             value={patientDocFilter}
-            onChange={(e) => setPatientDocFilter(e.target.value)}
+            onChange={(e) => {
+              setPatientDocFilter(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="">Barcha shifokorlar</option>
             {doctors.map(d => (
@@ -227,11 +244,11 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                 </tr>
               </thead>
               <tbody>
-                {filteredPatients.map(p => (
+                {paginatedPatients.map(p => (
                   <tr key={p.id}>
                     <td>
                       <div className="profile-cell">
-                        <div className="profile-avatar" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--color-success)' }}>
+                        <div className="profile-avatar" style={{ backgroundColor: 'hsl(var(--color-success-light))', color: 'hsl(var(--color-success))' }}>
                           {p.first_name.charAt(0)}
                         </div>
                         <div>
@@ -275,6 +292,12 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
             </table>
           )}
         </div>
+        <Pagination
+          totalItems={filteredPatients.length}
+          currentPage={safeCurrentPage}
+          pageSize={PAGE_SIZE}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Modal 1: Patient form */}
@@ -295,13 +318,13 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
             <form onSubmit={handlePatientSubmit}>
               <div className="modal-body">
                 {isClinician && selectedPatient && (
-                  <div className="auth-error" style={{ backgroundColor: 'var(--color-primary-light)', border: '1px solid var(--color-primary)', color: 'var(--text-heading)', marginBottom: '16px', textAlign: 'left' }}>
+                  <div className="auth-error" style={{ backgroundColor: 'hsl(var(--color-primary-light))', border: '1px solid hsl(var(--color-primary))', color: 'var(--text-heading)', marginBottom: '16px', textAlign: 'left' }}>
                     <strong>💡 Shifokor Eslatmasi:</strong> Klinik rolingiz sababli sizga bemorning shaxsiy ma'lumotlarini (Ism, Telefon, Manzil) o'zgartirish cheklangan. Bemorning faqat <strong>Tibbiy Eslatmalar</strong> va anamnez ma'lumotlarini tahrirlashingiz mumkin.
                   </div>
                 )}
 
                 {isReceptionist && selectedPatient && (
-                  <div className="auth-error" style={{ backgroundColor: 'var(--color-warning-light)', border: '1px solid var(--color-warning)', color: 'var(--text-heading)', marginBottom: '16px', textAlign: 'left' }}>
+                  <div className="auth-error" style={{ backgroundColor: 'hsl(var(--color-warning-light))', border: '1px solid hsl(var(--color-warning))', color: 'var(--text-heading)', marginBottom: '16px', textAlign: 'left' }}>
                     <strong>💡 Qabulxona Eslatmasi:</strong> Bemorning pasport, telefon va ro'yxatga olish ma'lumotlarini to'liq tahrirlashingiz mumkin. Klinik kasallik yozuvlari va shifokor eslatmalarini yozish faqat shifokorlarga tegishli.
                   </div>
                 )}
@@ -439,7 +462,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                         value={patientInput.notes}
                         onChange={(e) => setPatientInput({ ...patientInput, notes: e.target.value })}
                         required={isClinician}
-                        style={{ border: isClinician ? '2px solid var(--color-primary)' : '1px solid var(--border-color)' }}
+                        style={{ border: isClinician ? '2px solid hsl(var(--color-primary))' : '1px solid var(--border-color)' }}
                       />
                     </div>
                   )}
@@ -491,7 +514,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                   <div className="dossier-info-list">
                     <div className="dossier-info-item">
                       <span className="dossier-info-label">Qon Guruhi</span>
-                      <span className="dossier-info-value" style={{ color: 'var(--color-warning)' }}>
+                      <span className="dossier-info-value" style={{ color: 'hsl(var(--color-warning))' }}>
                         {patientFullProfile.blood_type}
                       </span>
                     </div>
@@ -520,7 +543,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
 
                     <div className="dossier-info-item" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
                       <span className="dossier-info-label">Biriktirilgan Shifokor</span>
-                      <span className="dossier-info-value" style={{ color: 'var(--color-primary)' }}>
+                      <span className="dossier-info-value" style={{ color: 'hsl(var(--color-primary))' }}>
                         {patientFullProfile.doctor_first_name ? `Dr. ${patientFullProfile.doctor_first_name} ${patientFullProfile.doctor_last_name}` : 'Mavjud emas'}
                       </span>
                       {patientFullProfile.doctor_specialization && (
@@ -536,7 +559,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                 <div className="patient-dossier-content">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div className="timeline-section-title">
-                      <Heart size={20} className="menu-item-icon" style={{ color: 'var(--color-danger)' }} />
+                      <Heart size={20} className="menu-item-icon" style={{ color: 'hsl(var(--color-danger))' }} />
                       <span>Kasallik Tarixi</span>
                     </div>
 
@@ -576,7 +599,7 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                           <div className="timeline-card">
                             <div className="timeline-header">
                               <span className="timeline-title" style={{ color: 'var(--text-heading)', fontSize: '16px' }}>
-                                <span style={{ color: 'var(--color-primary)', marginRight: '6px', fontWeight: '800' }}>
+                                <span style={{ color: 'hsl(var(--color-primary))', marginRight: '6px', fontWeight: '800' }}>
                                   [{diag.icd_code}]
                                 </span>
                                 {diag.description}
@@ -597,9 +620,9 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                                 Og'irlik darajasi:{' '}
                                 <span style={{ 
                                   fontWeight: '700',
-                                  color: diag.severity === 'mild' ? 'var(--color-success)' :
-                                         diag.severity === 'moderate' ? 'var(--color-primary)' :
-                                         diag.severity === 'severe' ? 'var(--color-warning)' : 'var(--color-danger)'
+                                  color: diag.severity === 'mild' ? 'hsl(var(--color-success))' :
+                                         diag.severity === 'moderate' ? 'hsl(var(--color-primary))' :
+                                         diag.severity === 'severe' ? 'hsl(var(--color-warning))' : 'hsl(var(--color-danger))'
                                 }}>
                                   {diag.severity === 'mild' && 'Yengil'}
                                   {diag.severity === 'moderate' && "O'rtacha"}

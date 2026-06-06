@@ -2,8 +2,8 @@
 
 :root {
   /* Shadcn Slate Light Theme Tokens (Cool Slate Light-Blue) */
-  --background: 210 40% 98%; /* Beautiful cool light blue-tinted background (#f8fafc) */
-  --foreground: 222.2 84% 4.9%; /* Rich deep blue-slate text */
+  --background: 196 100% 98%; /* Bright clinical blue wash */
+  --foreground: 215 28% 17%;
   
   --card: 0 0% 100%; /* Pure white cards to pop over the cool background */
   --card-foreground: 222.2 84% 4.9%;
@@ -11,7 +11,7 @@
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
   
-  --primary: 221.2 83.2% 53.3%; /* Rich premium blue background for primary buttons (#3b82f6) */
+  --primary: 199 89% 48%; /* Bright clinical cyan-blue */
   --primary-foreground: 0 0% 100%; /* Pure white text for primary buttons */
   
   --secondary: 210 40% 96.1%; /* Soft blue-gray secondary backgrounds */
@@ -20,7 +20,7 @@
   --muted: 210 40% 96.1%;
   --muted-foreground: 215.4 16.3% 46.9%; /* Muted slate-gray text */
   
-  --accent: 221.2 83.2% 53.3%; /* Solid vibrant Royal Cobalt Blue background for active/hover states */
+  --accent: 188 86% 43%; /* Fresh teal-blue for active/hover states */
   --accent-foreground: 0 0% 100%; /* Pure white text for active/hover states */
   
   --destructive: 0 84.2% 60.2%;
@@ -28,13 +28,19 @@
   
   --border: 214.3 31.8% 91.4%; /* Soft slate-blue borders (#e2e8f0) */
   --input: 214.3 31.8% 91.4%;
-  --ring: 221.2 83.2% 53.3%; /* Clinical focus blue ring */
+  --ring: 188 86% 43%;
   
   --radius: 0.5rem; /* 8px */
+  --radius-lg: 0.5rem;
+  --font-display: 'Outfit', sans-serif;
+  --text-heading: hsl(var(--foreground));
+  --text-muted: hsl(var(--muted-foreground));
+  --bg-body: hsl(var(--background));
+  --border-color: hsl(var(--border));
 
   /* Clinical highlights in Light Mode */
-  --color-primary: 221.2 83.2% 53.3%; /* Premium royal clinical blue */
-  --color-primary-light: 221.2 83.2% 53.3% / 0.08;
+  --color-primary: 199 89% 48%;
+  --color-primary-light: 199 89% 48% / 0.12;
   
   --color-success: 142.1 76.2% 36.3%; /* Emerald Mint */
   --color-success-light: 142.1 76.2% 36.3% / 0.08;
@@ -47,38 +53,38 @@
 }
 
 [data-theme="dark"] {
-  /* Shadcn Slate Dark Theme Tokens (Deep Blue-Slate) */
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
+  /* Brighter Dark Theme Tokens */
+  --background: 214 38% 15%;
+  --foreground: 190 45% 96%;
   
-  --card: 222.2 84% 4.9%;
+  --card: 214 34% 19%;
   --card-foreground: 210 40% 98%;
   
-  --popover: 222.2 84% 4.9%;
+  --popover: 214 34% 19%;
   --popover-foreground: 210 40% 98%;
   
-  --primary: 217.2 91.2% 59.8%; /* Bright cobalt blue for dark mode primary buttons */
-  --primary-foreground: 222.2 47.4% 11.2%; /* Dark slate text for legibility */
+  --primary: 188 86% 53%;
+  --primary-foreground: 214 38% 15%;
   
-  --secondary: 217.2 32.6% 17.5%;
+  --secondary: 204 34% 25%;
   --secondary-foreground: 210 40% 98%;
   
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
+  --muted: 204 34% 25%;
+  --muted-foreground: 193 28% 78%;
   
-  --accent: 217.2 91.2% 59.8%; /* Solid bright Cobalt Blue background for dark active/hover states */
-  --accent-foreground: 0 0% 100%; /* Pure white text for dark active/hover states */
+  --accent: 171 76% 46%;
+  --accent-foreground: 214 38% 15%;
   
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 210 40% 98%;
   
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 217.2 91.2% 59.8%; /* Unified focus blue ring */
+  --border: 205 28% 32%;
+  --input: 205 28% 32%;
+  --ring: 171 76% 46%;
   
   /* Clinical highlights in Dark Mode */
-  --color-primary: 217.2 91.2% 59.8%;
-  --color-primary-light: 217.2 91.2% 59.8% / 0.12;
+  --color-primary: 188 86% 53%;
+  --color-primary-light: 188 86% 53% / 0.16;
   
   --color-success: 142.1 70.6% 45.3%;
   --color-success-light: 142.1 70.6% 45.3% / 0.12;
@@ -626,23 +632,18 @@ h1, h2, h3, h4, h5, h6 {
 /* ========================================== TABLES ========================================== */
 
 .table-wrapper {
-  overflow-x: scroll; /* Force horizontal scrollbars to always show */
-  overflow-y: auto;   /* Enable vertical scroll inside table wrapper so scrollbars are always visible */
-  max-height: calc(100vh - 200px); /* Keeps the table fully inside the screen viewport */
+  overflow: visible;
   width: 100%;
   max-width: 100%;
   display: block;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: auto; /* Standard size scrollbar in Firefox */
-  scrollbar-color: hsl(var(--muted-foreground) / 0.65) hsl(var(--muted) / 0.5); /* Firefox style compatibility */
 }
 
 .data-table {
   width: 100%;
-  min-width: 1200px; /* Enforces active, scrollable horizontal scrollbars on all normal laptops/desktops */
   border-collapse: collapse;
   text-align: left;
   font-size: 14px;
+  table-layout: auto;
 }
 
 .data-table th {
@@ -651,11 +652,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   color: hsl(var(--muted-foreground));
   border-bottom: 1px solid hsl(var(--border));
-  background-color: hsl(var(--card)); /* Solid color to prevent text overlap in sticky state */
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  box-shadow: inset 0 -1px 0 hsl(var(--border)); /* Retains sharp border divider */
+  background-color: hsl(var(--muted) / 0.22);
 }
 
 .data-table td {
@@ -767,6 +764,57 @@ h1, h2, h3, h4, h5, h6 {
   background-color: hsl(var(--color-success-light));
 }
 
+/* Pagination */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  border-top: 1px solid hsl(var(--border));
+  background-color: hsl(var(--muted) / 0.12);
+}
+
+.pagination-info {
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.pagination-btn:hover:not(:disabled),
+.pagination-btn.active {
+  background-color: hsl(var(--accent));
+  border-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.pagination-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 /* ========================================== BUTTONS ========================================== */
 
 .btn {
@@ -810,6 +858,144 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn-danger:hover {
   opacity: 0.9;
+}
+
+/* ========================================== TOASTS & CONFIRM ========================================== */
+
+.toast-host {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 1400;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 12px;
+  border-radius: var(--radius);
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 14px 30px hsl(215 28% 17% / 0.18);
+  pointer-events: auto;
+}
+
+.toast-success {
+  border-left: 4px solid hsl(var(--color-success));
+}
+
+.toast-error {
+  border-left: 4px solid hsl(var(--color-danger));
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.toast-success .toast-icon {
+  color: hsl(var(--color-success));
+}
+
+.toast-error .toast-icon {
+  color: hsl(var(--color-danger));
+}
+
+.toast-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-content strong {
+  font-size: 13px;
+  color: hsl(var(--foreground));
+}
+
+.toast-content span {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.4;
+}
+
+.toast-close {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background-color: transparent;
+  color: hsl(var(--muted-foreground));
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-close:hover {
+  background-color: hsl(var(--muted) / 0.7);
+  color: hsl(var(--foreground));
+}
+
+.confirm-overlay {
+  z-index: 1300;
+}
+
+.confirm-dialog {
+  width: min(420px, calc(100vw - 32px));
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: 0 18px 45px hsl(215 28% 17% / 0.24);
+  overflow: hidden;
+}
+
+.confirm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px 0;
+}
+
+.confirm-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius);
+  background-color: hsl(var(--color-warning-light));
+  color: hsl(var(--color-warning));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-body {
+  padding: 14px 18px 20px;
+}
+
+.confirm-body h2 {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.confirm-body p {
+  color: hsl(var(--muted-foreground));
+  font-size: 14px;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid hsl(var(--border));
+  background-color: hsl(var(--muted) / 0.12);
 }
 
 /* ========================================== MODALS ========================================== */

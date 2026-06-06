@@ -4,7 +4,7 @@ import { Activity } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://klinika-1-rj8n.onrender.com/api';
 
-function Login({ setToken, setUser }) {
+function Login({ setToken, setUser, notify }) {
   const navigate = useNavigate();
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'signup'
   const [authForm, setAuthForm] = useState({ username: '', email: '', password: '', role: 'clinician' });
@@ -50,11 +50,12 @@ function Login({ setToken, setUser }) {
         // Redirect to dashboard
         navigate('/dashboard');
       } else {
-        alert('Hisob yaratildi! Endi kirish bo\'limi orqali tizimga kiring.');
+        notify?.('success', 'Request jo\'natildi', 'Hisob yaratildi. Endi kirish bo\'limi orqali tizimga kiring.');
         setAuthMode('login');
       }
     } catch (err) {
       setAuthError(err.message);
+      notify?.('error', 'Request jo\'natilmadi', err.message || 'Xatolik yuz berdi.');
     } finally {
       setLoading(false);
     }

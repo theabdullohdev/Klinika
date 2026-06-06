@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 
-function Departments({ departments, isAdmin, loading, setLoading, fetchDepartments, apiRequest }) {
+function Departments({ departments, isAdmin, loading, setLoading, fetchDepartments, apiRequest, notify }) {
   const [activeModal, setActiveModal] = useState(null); // null | 'dept_form'
   const [deptInput, setDeptInput] = useState({ name: '', description: '' });
 
@@ -11,11 +11,11 @@ function Departments({ departments, isAdmin, loading, setLoading, fetchDepartmen
     setLoading(true);
     try {
       await apiRequest('POST', '/departments', deptInput);
-      alert('Yangi bo\'lim yaratildi!');
+      notify?.('success', 'Request jo\'natildi', 'Yangi bo\'lim yaratildi.');
       setActiveModal(null);
       fetchDepartments();
     } catch (err) {
-      alert(err.message || 'Xatolik yuz berdi');
+      notify?.('error', 'Request jo\'natilmadi', err.message || 'Xatolik yuz berdi.');
     } finally {
       setLoading(false);
     }
@@ -26,10 +26,10 @@ function Departments({ departments, isAdmin, loading, setLoading, fetchDepartmen
     if (!confirm('Haqiqatan ham bu bo\'limni o\'chirmoqchimisiz? (Soft-deactivate)')) return;
     try {
       await apiRequest('DELETE', `/departments/${id}`);
-      alert('Bo\'lim faolsizlantirildi!');
+      notify?.('success', 'Request jo\'natildi', 'Bo\'lim faolsizlantirildi.');
       fetchDepartments();
     } catch (err) {
-      alert(err.message || 'Xatolik yuz berdi');
+      notify?.('error', 'Request jo\'natilmadi', err.message || 'Xatolik yuz berdi.');
     }
   };
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Routes, Route, Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { 
   Activity, Award, UserRound, FolderHeart, LogOut, Sun, Moon, 
@@ -13,6 +13,8 @@ import Patients from './pages/Patients';
 import Diagnoses from './pages/Diagnoses';
 import Departments from './pages/Departments';
 import ProtectedRoute from './components/ProtectedRoute';
+import ToastHost from './components/ToastHost';
+import ConfirmDialog from './components/ConfirmDialog';
 
 // Read API URL from environment variables, fallback to Render production API URL
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://klinika-1-rj8n.onrender.com/api';
@@ -30,6 +32,8 @@ function App() {
   // App Layout State
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
   const [loading, setLoading] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Data States
   const [doctors, setDoctors] = useState([]);
@@ -48,6 +52,16 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  const dismissToast = useCallback((id) => {
+    setToasts((current) => current.filter((toast) => toast.id !== id));
+  }, []);
+
+  const notify = useCallback((type, title, message = '') => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts((current) => [...current, { id, type, title, message }]);
+    window.setTimeout(() => dismissToast(id), 3500);
+  }, [dismissToast]);
 
   // Fetch all data when token is active
   useEffect(() => {
@@ -87,18 +101,22 @@ function App() {
     } catch (err) {
       console.error(`API Error ${path}:`, err.message);
       if (err.message.includes('No token') || err.message.includes('expired token')) {
-        handleLogout();
+        performLogout();
       }
       throw err;
     }
   };
 
-  const handleLogout = () => {
+  const performLogout = () => {
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');
+  };
+
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
   };
 
   // Fetch functions
@@ -141,6 +159,17 @@ function App() {
   const DashboardLayout = () => {
     return (
       <div className="app-wrapper">
+        <ConfirmDialog
+          open={showLogoutConfirm}
+          title="Tizimdan chiqasizmi?"
+          message="Chiqsangiz, qayta kirish uchun login va parolni yana kiritishingiz kerak bo'ladi."
+          confirmText="Chiqish"
+          onCancel={() => setShowLogoutConfirm(false)}
+          onConfirm={() => {
+            setShowLogoutConfirm(false);
+            performLogout();
+          }}
+        />
         {/* Sidebar Navigation */}
         <aside className="sidebar">
           <div className="sidebar-brand">
@@ -201,8 +230,8 @@ function App() {
               <div 
                 className="user-avatar" 
                 style={{ 
-                  backgroundColor: isReceptionist ? 'var(--color-warning-light)' : (isClinician ? 'var(--color-primary-light)' : '#cbd5e1'), 
-                  color: isReceptionist ? 'var(--color-warning)' : (isClinician ? 'var(--color-primary)' : '#1e293b') 
+                  backgroundColor: isReceptionist ? 'hsl(var(--color-warning-light))' : (isClinician ? 'hsl(var(--color-primary-light))' : '#cbd5e1'), 
+                  color: isReceptionist ? 'hsl(var(--color-warning))' : (isClinician ? 'hsl(var(--color-primary))' : '#1e293b') 
                 }}
               >
                 {user?.username ? user.username.substring(0, 2).toUpperCase() : 'US'}
@@ -211,7 +240,7 @@ function App() {
                 <div className="user-name">{user?.username}</div>
                 <div 
                   className="user-role" 
-                  style={{ color: isReceptionist ? 'var(--color-warning)' : (isClinician ? 'var(--color-primary)' : 'var(--color-success)') }}
+                  style={{ color: isReceptionist ? 'hsl(var(--color-warning))' : (isClinician ? 'hsl(var(--color-primary))' : 'hsl(var(--color-success))') }}
                 >
                   {user?.role === 'receptionist' ? 'Receptionist' : user?.role}
                 </div>
@@ -290,7 +319,7 @@ function App() {
       <Route 
         path="/login" 
         element={
-          token ? <Navigate to="/dashboard" replace /> : <Login setToken={setToken} setUser={setUser} />
+          token ? <Navigate to="/dashboard" replace /> : <Login setToken={setToken} setUser={setUser} notify={notify} />
         } 
       />
 
@@ -321,6 +350,7 @@ function App() {
                 fetchDoctors={fetchDoctors}
                 fetchDoctorStats={fetchDoctorStats}
                 apiRequest={apiRequest}
+                notify={notify}
               />
             } 
           />
@@ -337,6 +367,7 @@ function App() {
                 setLoading={setLoading}
                 fetchPatients={fetchPatients}
                 apiRequest={apiRequest}
+                notify={notify}
               />
             } 
           />
@@ -352,6 +383,7 @@ function App() {
                   setLoading={setLoading}
                   fetchDiagnoses={fetchDiagnoses}
                   apiRequest={apiRequest}
+                  notify={notify}
                 />
               )
             } 
@@ -366,11 +398,14 @@ function App() {
                 setLoading={setLoading}
                 fetchDepartments={fetchDepartments}
                 apiRequest={apiRequest}
+                notify={notify}
               />
             } 
           />
         </Route>
       </Route>
+
+      <ToastHost toasts={toasts} onDismiss={dismissToast} />
 
       {/* Wildcard fallback redirection */}
       <Route 

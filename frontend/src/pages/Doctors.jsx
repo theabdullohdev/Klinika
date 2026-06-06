@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { Search, Plus, Edit2, Trash2, Award, X } from 'lucide-react';
+import Pagination from '../components/Pagination';
 
-function Doctors({ doctors, departments, isAdmin, loading, setLoading, fetchDoctors, fetchDoctorStats, apiRequest }) {
+const PAGE_SIZE = 8;
+
+function Doctors({ doctors, departments, isAdmin, loading, setLoading, fetchDoctors, fetchDoctorStats, apiRequest, notify }) {
   const [doctorSearch, setDoctorSearch] = useState('');
   const [doctorDeptFilter, setDoctorDeptFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [activeModal, setActiveModal] = useState(null); // null | 'doctor_form'
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   
@@ -14,22 +18,25 @@ function Doctors({ doctors, departments, isAdmin, loading, setLoading, fetchDoct
 
   const handleDoctorSubmit = async (e) => {
     e.preventDefault();
-    if (!isAdmin) return alert('Sizda shifokorlarni boshqarish huquqi yo\'q!');
+    if (!isAdmin) {
+      notify?.('error', 'Request jo\'natilmadi', 'Sizda shifokorlarni boshqarish huquqi yo\'q.');
+      return;
+    }
     
     setLoading(true);
     try {
       if (selectedDoctor) {
         await apiRequest('PUT', `/doctors/${selectedDoctor.id}`, doctorInput);
-        alert('Shifokor profili yangilandi!');
+        notify?.('success', 'Request jo\'natildi', 'Shifokor profili yangilandi.');
       } else {
         await apiRequest('POST', '/doctors', doctorInput);
-        alert('Yangi shifokor muvaffaqiyatli qo\'shildi!');
+        notify?.('success', 'Request jo\'natildi', 'Yangi shifokor muvaffaqiyatli qo\'shildi.');
       }
       setActiveModal(null);
       fetchDoctors();
       fetchDoctorStats();
     } catch (err) {
-      alert(err.message || 'Xatolik yuz berdi');
+      notify?.('error', 'Request jo\'natilmadi', err.message || 'Xatolik yuz berdi.');
     } finally {
       setLoading(false);
     }
@@ -57,11 +64,11 @@ function Doctors({ doctors, departments, isAdmin, loading, setLoading, fetchDoct
     if (!confirm('Haqiqatan ham bu shifokorni o\'chirishni xohlaysizmi? Tegishli yozuvlar saqlanadi.')) return;
     try {
       await apiRequest('DELETE', `/doctors/${id}`);
-      alert('Shifokor o\'chirildi!');
+      notify?.('success', 'Request jo\'natildi', 'Shifokor o\'chirildi.');
       fetchDoctors();
       fetchDoctorStats();
     } catch (err) {
-      alert(err.message || 'O\'chirishda xatolik yuz berdi');
+      notify?.('error', 'Request jo\'natilmadi', err.message || 'O\'chirishda xatolik yuz berdi.');
     }
   };
 
@@ -72,6 +79,10 @@ function Doctors({ doctors, departments, isAdmin, loading, setLoading, fetchDoct
     const matchesDept = doctorDeptFilter === '' || doc.department_id === doctorDeptFilter;
     return matchesSearch && matchesDept;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredDoctors.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedDoctors = filteredDoctors.slice((safeCurrentPage - 1) * PAGE_SIZE, safeCurrentPage * PAGE_SIZE);
 
   return (
     <>
@@ -84,14 +95,20 @@ function Doctors({ doctors, departments, isAdmin, loading, setLoading, fetchDoct
               type="text" 
               placeholder="Shifokor ismi yoki mutaxassisligi bo'yicha..." 
               value={doctorSearch}
-              onChange={(e) => setDoctorSearch(e.target.value)}
+              onChange={(e) => {
+                setDoctorSearch(e.target.value);
+                setCurrentPage(1);
+              }}
             />
           </div>
 
           <select 
             className="filter-select"
             value={doctorDeptFilter}
-            onChange={(e) => setDoctorDeptFilter(e.target.value)}
+            onChange={(e) => {
+              setDoctorDeptFilter(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="">Barcha bo'limlar</option>
             {departments.map(d => (
@@ -141,7 +158,7 @@ function Doctors({ doctors, departments, isAdmin, loading, setLoading, fetchDoct
                 </tr>
               </thead>
               <tbody>
-                {filteredDoctors.map(doc => (
+                {paginatedDoctors.map(doc => (
                   <tr key={doc.id}>
                     <td>
                       <div className="profile-cell">
@@ -181,6 +198,12 @@ function Doctors({ doctors, departments, isAdmin, loading, setLoading, fetchDoct
             </table>
           )}
         </div>
+        <Pagination
+          totalItems={filteredDoctors.length}
+          currentPage={safeCurrentPage}
+          pageSize={PAGE_SIZE}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Modal: Doctor Form */}
