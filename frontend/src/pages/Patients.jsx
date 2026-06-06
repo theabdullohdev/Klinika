@@ -601,14 +601,20 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                                          diag.severity === 'moderate' ? 'var(--color-primary)' :
                                          diag.severity === 'severe' ? 'var(--color-warning)' : 'var(--color-danger)'
                                 }}>
-                                  {diag.severity.toUpperCase()}
+                                  {diag.severity === 'mild' && 'Yengil'}
+                                  {diag.severity === 'moderate' && "O'rtacha"}
+                                  {diag.severity === 'severe' && "Og'ir"}
+                                  {diag.severity === 'critical' && 'Kritik'}
                                 </span>
                               </span>
                               <span>•</span>
                               <span>
                                 Holati:{' '}
-                                <span className={`badge ${diag.status === 'active' ? 'badge-danger' : 'badge-success'}`} style={{ padding: '2px 8px', fontSize: '10px' }}>
-                                  {diag.status.toUpperCase()}
+                                <span className={`badge ${diag.status === 'active' ? 'badge-danger' : diag.status === 'resolved' ? 'badge-success' : diag.status === 'chronic' ? 'badge-warning' : 'badge-primary'}`} style={{ padding: '2px 8px', fontSize: '10px' }}>
+                                  {diag.status === 'active' && 'Faol'}
+                                  {diag.status === 'resolved' && 'Tuzalgan'}
+                                  {diag.status === 'chronic' && 'Surunkali'}
+                                  {diag.status === 'monitoring' && 'Kuzatuvda'}
                                 </span>
                               </span>
                               <span>•</span>
@@ -702,10 +708,10 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                       onChange={(e) => setDiagnosisInput({ ...diagnosisInput, severity: e.target.value })}
                       required
                     >
-                      <option value="mild">Yengil (Mild)</option>
-                      <option value="moderate">O'rtacha (Moderate)</option>
-                      <option value="severe">Og'ir (Severe)</option>
-                      <option value="critical">Kritik (Critical)</option>
+                      <option value="mild">Yengil</option>
+                      <option value="moderate">O'rtacha</option>
+                      <option value="severe">Og'ir</option>
+                      <option value="critical">Kritik</option>
                     </select>
                   </div>
 
@@ -716,10 +722,10 @@ function Patients({ patients, doctors, isAdmin, isClinician, isReceptionist, loa
                       onChange={(e) => setDiagnosisInput({ ...diagnosisInput, status: e.target.value })}
                       required
                     >
-                      <option value="active">Active (Faol)</option>
-                      <option value="resolved">Resolved (Tuzalgan)</option>
-                      <option value="chronic">Chronic (Surunkali)</option>
-                      <option value="monitoring">Monitoring (Kuzatuvda)</option>
+                      <option value="active">Faol</option>
+                      <option value="resolved">Tuzalgan</option>
+                      <option value="chronic">Surunkali</option>
+                      <option value="monitoring">Kuzatuvda</option>
                     </select>
                   </div>
 
